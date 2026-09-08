@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zomato Partner Profit Calculator</title>
+<style>
+  :root{
+    --crimson:#E23744;
+    --crimson-dark:#C42836;
+    --crimson-deep:#9E1F2B;
+    --ink:#111111;
+    --card:#FFFFFF;
+    --border:#F0C9CC;
+    --green:#1E8449;
+    --green-tint:#E7F7ED;
+    --danger:#B3341F;
+    --danger-tint:#FBE7E1;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--crimson);
+    background-image:linear-gradient(160deg, var(--crimson) 0%, var(--crimson-dark) 55%, var(--crimson-deep) 100%);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  h1,h2,h3,p,span,label,div{color:var(--ink);}
+
+  /* ---------- Header ---------- */
+  header{
+    background:var(--card);
+    padding:14px 20px;
+    display:flex;align-items:center;gap:12px;
+    position:sticky;top:0;z-index:40;
+    box-shadow:0 4px 16px rgba(0,0,0,0.15);
+  }
+  .logo-badge{
+    width:38px;height:38px;border-radius:10px;
+    background:var(--crimson);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:19px;flex-shrink:0;
+  }
+  .brand-text{display:flex;flex-direction:column;line-height:1.15;}
+  .brand-text .l1{font-weight:800;font-size:17px;letter-spacing:-0.01em;}
+  .brand-text .l2{font-size:12px;font-weight:600;opacity:0.6;}
+
+  /* ---------- Tabs ---------- */
+  .tabs{
+    max-width:1180px;margin:0 auto;padding:16px 18px 0;
+    display:flex;gap:8px;flex-wrap:wrap;
+  }
+  .tab-btn{
+    background:var(--card);border:none;border-radius:999px;
+    padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;
+    box-shadow:0 3px 10px rgba(0,0,0,0.12);
+  }
+  .tab-btn.active{background:var(--ink);color:#fff;}
+  .tab-btn.active *{color:#fff;}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 18px 90px;}
+  .page{display:none;}
+  .page.active{display:block;}
+
+  h1.page-title{font-size:23px;font-weight:800;margin:4px 0 4px;letter-spacing:-0.01em;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,0.15);}
+  p.page-sub{font-weight:600;font-size:14px;margin:0 0 22px;max-width:620px;line-height:1.5;color:#fff;opacity:0.92;}
+
+  /* ---------- Price input card ---------- */
+  .price-card{
+    background:var(--card);border-radius:18px;
+    padding:22px 24px;box-shadow:0 10px 28px rgba(0,0,0,0.18);
+    margin-bottom:22px;
+  }
+  .price-card label{
+    display:block;font-size:12.5px;font-weight:800;text-transform:uppercase;
+    letter-spacing:0.04em;margin-bottom:10px;opacity:0.65;
+  }
+  .price-input-row{display:flex;align-items:center;gap:8px;}
+  .rupee-sym{font-size:28px;font-weight:800;color:var(--crimson);}
+  input.price-input{
+    flex:1;font-size:30px;font-weight:800;
+    border:none;outline:none;background:transparent;width:100%;
+    font-family:inherit;color:var(--ink);
+  }
+  .price-hint{font-size:12.5px;margin-top:6px;font-weight:600;opacity:0.55;}
+
+  /* ---------- Layout ---------- */
+  .layout{display:grid;grid-template-columns:1fr 340px;gap:22px;align-items:start;}
+  @media (max-width:900px){ .layout{grid-template-columns:1fr;} }
+
+  /* ---------- Preset banner ---------- */
+  .preset-banner{
+    background:var(--card);
+    border-left:5px solid var(--crimson);border-radius:14px;
+    padding:16px 18px;margin-bottom:18px;
+    display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
+    box-shadow:0 6px 18px rgba(0,0,0,0.12);
+  }
+  .preset-banner .txt{font-size:13.5px;line-height:1.5;max-width:560px;font-weight:600;}
+  .preset-btn{
+    background:var(--ink);color:#fff;border:none;border-radius:10px;
+    padding:11px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;
+  }
+  .preset-btn:hover{background:#000;}
+
+  /* ---------- Cost cards ---------- */
+  .section-label{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin:6px 0 12px;color:#fff;}
+  .cost-card{
+    background:var(--card);border-radius:14px;
+    padding:16px 18px;margin-bottom:12px;box-shadow:0 6px 16px rgba(0,0,0,0.1);
+    transition:opacity .15s;
+  }
+  .cost-card.disabled{opacity:0.45;}
+  .cost-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px;}
+  .cost-name{font-weight:800;font-size:15px;}
+  .cost-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+
+  .switch{position:relative;width:40px;height:23px;flex-shrink:0;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider-track{position:absolute;cursor:pointer;inset:0;background:#E6D5D7;border-radius:999px;transition:.15s;}
+  .slider-track:before{content:"";position:absolute;height:17px;width:17px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,0.3);}
+  .switch input:checked + .slider-track{background:var(--crimson);}
+  .switch input:checked + .slider-track:before{transform:translateX(17px);}
+
+  .trash-btn{background:none;border:none;cursor:pointer;font-size:15px;padding:3px 5px;line-height:1;border-radius:6px;opacity:0.55;}
+  .trash-btn:hover{opacity:1;color:var(--danger);}
+
+  .stepper{display:flex;align-items:center;gap:0;border:1.5px solid #EEE1E3;border-radius:10px;overflow:hidden;width:fit-content;}
+  .step-btn{
+    background:#FBF2F3;border:none;width:34px;height:34px;font-size:17px;font-weight:800;
+    cursor:pointer;color:var(--crimson);
+  }
+  .step-btn:hover{background:var(--border);}
+  input.pct-input{
+    width:56px;height:34px;border:none;border-left:1.5px solid #EEE1E3;border-right:1.5px solid #EEE1E3;
+    text-align:center;font-size:14.5px;font-weight:800;font-family:inherit;color:var(--ink);
+    -moz-appearance:textfield;
+  }
+  input.pct-input::-webkit-outer-spin-button, input.pct-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .pct-sign{padding:0 10px;font-weight:800;font-size:13px;opacity:0.5;}
+
+  .cost-controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .bar-track{flex:1;min-width:100px;height:8px;background:#F3E4E5;border-radius:999px;overflow:hidden;}
+  .bar-fill{height:100%;background:linear-gradient(90deg,var(--crimson),var(--crimson-dark));border-radius:999px;transition:width .2s;}
+
+  .cost-rupee{
+    margin-top:12px;font-size:13.5px;display:flex;justify-content:space-between;
+    border-top:1px dashed #EEE1E3;padding-top:9px;font-weight:600;opacity:0.75;
+  }
+  .cost-rupee .amt{font-weight:800;opacity:1;}
+
+  .add-row-wrap{margin-top:6px;}
+  .add-row-btn{
+    width:100%;background:var(--card);border:2px dashed rgba(255,255,255,0.6);border-radius:12px;
+    padding:13px;font-size:14px;font-weight:800;color:var(--crimson);cursor:pointer;
+  }
+  .add-row-btn:hover{background:var(--border);}
+
+  .custom-form{background:var(--card);border-radius:14px;padding:16px 18px;margin-bottom:12px;display:none;gap:10px;box-shadow:0 6px 16px rgba(0,0,0,0.1);}
+  .custom-form.show{display:flex;flex-wrap:wrap;}
+  .custom-form input[type=text]{flex:2;min-width:160px;padding:9px 10px;border:1.5px solid #EEE1E3;border-radius:8px;font-family:inherit;font-size:14px;}
+  .custom-form input[type=number]{flex:1;min-width:90px;padding:9px 10px;border:1.5px solid #EEE1E3;border-radius:8px;font-family:inherit;font-size:14px;}
+  .custom-form button{background:var(--crimson);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-weight:800;font-size:13.5px;cursor:pointer;}
+  .custom-form button.cancel{background:transparent;color:var(--ink);border:1.5px solid #EEE1E3;}
+
+  /* ---------- Summary panel ---------- */
+  .summary{position:sticky;top:96px;background:var(--card);border-radius:18px;padding:22px;box-shadow:0 14px 34px rgba(0,0,0,0.2);border:3px solid var(--green);}
+  .summary.loss{border-color:var(--danger);}
+  .summary-title{font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px;opacity:0.6;}
+  .summary-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px dashed #EEE1E3;font-size:13.5px;font-weight:600;}
+  .summary-row:last-of-type{border-bottom:none;}
+  .summary-row .v{font-weight:800;}
+
+  .net-block{margin-top:16px;border-radius:12px;padding:18px;text-align:center;background:var(--green-tint);}
+  .net-block.loss{background:var(--danger-tint);}
+  .net-block .lbl{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;opacity:0.6;}
+  .net-block .val{font-size:32px;font-weight:800;color:var(--green);margin-top:4px;}
+  .net-block.loss .val{color:var(--danger);}
+  .net-block .val2{font-size:15px;font-weight:800;color:var(--green);margin-top:2px;}
+  .net-block.loss .val2{color:var(--danger);}
+  .net-block .msg{font-size:12.5px;margin-top:8px;line-height:1.5;font-weight:600;opacity:0.7;}
+
+  /* ---------- Comparison page ---------- */
+  .compare-card{background:var(--card);border-radius:18px;padding:22px 22px 8px;box-shadow:0 10px 28px rgba(0,0,0,0.18);overflow-x:auto;}
+  table.compare-table{width:100%;border-collapse:collapse;min-width:640px;}
+  table.compare-table th{
+    text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;
+    padding:12px 14px;border-bottom:2px solid var(--ink);font-weight:800;opacity:0.7;
+  }
+  table.compare-table td{padding:14px;border-bottom:1px solid #F1E4E5;font-size:13.5px;font-weight:600;vertical-align:top;}
+  table.compare-table tr.total-row td, table.compare-table tr.net-row td{font-weight:800;font-size:14.5px;}
+  table.compare-table tr.total-row{background:#FBF2F3;}
+  table.compare-table tr.net-row{background:var(--green-tint);}
+  .why-col{opacity:0.75;font-weight:500;max-width:280px;}
+  .pill{display:inline-block;padding:3px 9px;border-radius:999px;background:#F3E4E5;font-weight:800;font-size:12.5px;}
+
+  /* ---------- Dual calculator page ---------- */
+  .dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media (max-width:900px){ .dual-grid{grid-template-columns:1fr;} }
+  .dual-col-title{font-size:15px;font-weight:800;color:#fff;margin-bottom:10px;padding:8px 14px;background:rgba(0,0,0,0.18);border-radius:10px;display:inline-block;}
+
+  .delta-card{
+    margin-top:24px;background:var(--card);border-radius:18px;padding:22px;box-shadow:0 10px 28px rgba(0,0,0,0.18);
+    text-align:center;
+  }
+  .delta-card .lbl{font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;opacity:0.6;}
+  .delta-card .val{font-size:30px;font-weight:800;color:var(--green);margin-top:6px;}
+  .delta-card .val.loss{color:var(--danger);}
+  .delta-card .msg{font-size:13px;font-weight:600;opacity:0.7;margin-top:8px;max-width:520px;margin-left:auto;margin-right:auto;line-height:1.5;}
+
+  footer.foot{text-align:center;color:#fff;opacity:0.7;font-size:12px;padding:20px 0 0;font-weight:600;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-badge">Z</div>
+  <div class="brand-text">
+    <span class="l1">Zomato Partner Profit Calculator</span>
+    <span class="l2">Cloud kitchen menu cost &amp; profitability</span>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-page="page-calc">📊 Profit Calculator</button>
+  <button class="tab-btn" data-page="page-compare">📋 Dine-In vs Zomato</button>
+  <button class="tab-btn" data-page="page-dual">⚖️ Side-by-Side Calculator</button>
+</nav>
+
+<div class="wrap">
+
+  <!-- ================= PAGE 1: CALCULATOR ================= -->
+  <section class="page active" id="page-calc">
+    <h1 class="page-title">Know your real margin, per plate.</h1>
+    <p class="page-sub">Set your menu price, adjust every cost that eats into it, and watch your net profit update live.</p>
+    <div id="calc1-root"></div>
+  </section>
+
+  <!-- ================= PAGE 2: COMPARISON ================= -->
+  <section class="page" id="page-compare">
+    <h1 class="page-title">The cost comparison: Dine-in vs. Zomato incremental orders</h1>
+    <p class="page-sub">Most of your fixed costs are already paid for by dine-in. Zomato orders mostly add variable costs on top — which is why the incremental math works in your favour.</p>
+    <div class="compare-card">
+      <table class="compare-table">
+        <thead>
+          <tr><th>Cost category</th><th>Existing dine-in setup</th><th>New Zomato orders</th><th>Why your wallet wins 💰</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Rent &amp; Electricity</td>
+            <td><span class="pill">15%</span> Fixed expense</td>
+            <td><span class="pill">0%</span> Zero added cost</td>
+            <td class="why-col">Your rent doesn't increase by a single rupee if you print an extra Zomato bill.</td>
+          </tr>
+          <tr>
+            <td>Staff &amp; Salaries</td>
+            <td><span class="pill">25%</span> Fixed expense</td>
+            <td><span class="pill">0%</span> Zero added cost</td>
+            <td class="why-col">Your chefs are already there. Cooking Zomato orders utilises their idle time between table rushes.</td>
+          </tr>
+          <tr>
+            <td>Raw Food Ingredients</td>
+            <td><span class="pill">25%</span></td>
+            <td><span class="pill">25%</span></td>
+            <td class="why-col">Stays exactly the same. You buy in larger bulk, which may even lower this cost.</td>
+          </tr>
+          <tr>
+            <td>Packaging Material</td>
+            <td><span class="pill">0%</span></td>
+            <td><span class="pill">5%</span></td>
+            <td class="why-col">The only new physical cost — boxes, lids, tape, bags.</td>
+          </tr>
+          <tr>
+            <td>Zomato Commission</td>
+            <td><span class="pill">0%</span></td>
+            <td><span class="pill">25%</span></td>
+            <td class="why-col">The platform fee for delivery riders, tracking, and customer reach.</td>
+          </tr>
+          <tr>
+            <td>Marketing &amp; Discounts</td>
+            <td><span class="pill">2%</span></td>
+            <td><span class="pill">15%</span></td>
+            <td class="why-col">Optional but smart fund used to aggressively pull customers away from competitors.</td>
+          </tr>
+          <tr class="total-row">
+            <td>TOTAL COST</td>
+            <td>67%</td>
+            <td>70%</td>
+            <td class="why-col">Nearly identical cost structures, but completely different mechanics.</td>
+          </tr>
+          <tr class="net-row">
+            <td>💰 NET PROFIT MARGIN</td>
+            <td>33%</td>
+            <td>30%</td>
+            <td class="why-col">Pure, incremental extra cash.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= PAGE 3: SIDE-BY-SIDE ================= -->
+  <section class="page" id="page-dual">
+    <h1 class="page-title">Dine-in vs. Zomato — calculate both, side by side</h1>
+    <p class="page-sub">Run the same dish through both cost structures at once, and see exactly how much incremental profit a Zomato order adds.</p>
+    <div class="dual-grid">
+      <div>
+        <div class="dual-col-title">🍽️ Existing Dine-In Setup</div>
+        <div id="calc2-root"></div>
+      </div>
+      <div>
+        <div class="dual-col-title">📦 New Zomato Orders</div>
+        <div id="calc3-root"></div>
+      </div>
+    </div>
+    <div class="delta-card">
+      <div class="lbl">Incremental profit from taking this dish onto Zomato</div>
+      <div class="val" id="deltaVal">₹0</div>
+      <div class="msg" id="deltaMsg">Adjust either calculator above — this updates live.</div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="foot">Figures are illustrative — actual Zomato commission, ad spend and discount rates vary by city, category and campaign.</footer>
+
+<script>
+/* ---------------- Tabs ---------------- */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.page).classList.add('active');
+  });
+});
+
+/* ---------------- Reusable calculator factory ---------------- */
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+function clampPct(v){ v = parseFloat(v); if(isNaN(v)) v = 0; return Math.max(0, Math.min(100, v)); }
+function rupee(v){ return '₹' + Math.round(v).toLocaleString('en-IN'); }
+
+function createCalculator(rootEl, opts){
+  let seq = 0;
+  let price = opts.defaultPrice;
+  let costs = opts.defaultCosts.map(c=>({...c}));
+  let onChange = opts.onChange || function(){};
+
+  rootEl.innerHTML = `
+    <div class="price-card">
+      <label>${escapeHtml(opts.priceLabel || 'Target dish menu price')}</label>
+      <div class="price-input-row">
+        <span class="rupee-sym">₹</span>
+        <input type="number" class="price-input" data-role="price" value="${price}" min="0" step="1">
+      </div>
+      <div class="price-hint">${escapeHtml(opts.priceHint || '')}</div>
+    </div>
+    ${opts.showPreset ? `
+    <div class="preset-banner">
+      <div class="txt">💡 Note: Pure cloud kitchens often treat Rent &amp; Labor differently for online orders. <b>Click here</b> to instantly set Rent &amp; Labor to 0% for pure online margin mapping.</div>
+      <button class="preset-btn" data-role="preset">Zero out Rent &amp; Labor</button>
+    </div>` : ''}
+    <div class="section-label" style="color:${opts.darkLabel ? 'inherit' : '#fff'}">Cost breakdown</div>
+    <div data-role="costList"></div>
+    <div class="custom-form" data-role="customForm">
+      <input type="text" data-role="customName" placeholder="Custom expense name (e.g. Packaging)">
+      <input type="number" data-role="customPct" placeholder="%" min="0" max="100" step="1">
+      <button data-role="customAdd">Add</button>
+      <button class="cancel" data-role="customCancel">Cancel</button>
+    </div>
+    <div class="add-row-wrap">
+      <button class="add-row-btn" data-role="addCustom">+ Add Custom Expense Row</button>
+    </div>
+    ${opts.layout==='sidebar' ? `
+    <div class="layout-summary-placeholder"></div>
+    ` : ''}
+  `;
+
+  const priceEl = rootEl.querySelector('[data-role="price"]');
+  const costListEl = rootEl.querySelector('[data-role="costList"]');
+
+  let summaryEl, summaryElInner;
+  if(opts.layout==='sidebar'){
+    // build a wrapping layout grid with sidebar summary
+    const contentHtml = rootEl.innerHTML;
+    rootEl.innerHTML = `<div class="layout"><div>${contentHtml}</div><div>
+      <div class="summary" data-role="summary">
+        <div class="summary-title">Live profitability</div>
+        <div class="summary-row"><span>Total cost</span><span class="v" data-role="sTotalPct">0%</span></div>
+        <div class="summary-row"><span>Total deductions</span><span class="v" data-role="sTotalRupee">₹0</span></div>
+        <div class="net-block" data-role="netBlock">
+          <div class="lbl">Net profit margin</div>
+          <div class="val" data-role="sNetPct">0%</div>
+          <div class="val2" data-role="sNetRupee">₹0 per plate</div>
+          <div class="msg" data-role="sMsg"></div>
+        </div>
+      </div>
+    </div></div>`;
+  } else {
+    rootEl.insertAdjacentHTML('beforeend', `
+      <div class="summary" data-role="summary" style="position:static;margin-top:18px;">
+        <div class="summary-title">Live profitability</div>
+        <div class="summary-row"><span>Total cost</span><span class="v" data-role="sTotalPct">0%</span></div>
+        <div class="summary-row"><span>Total deductions</span><span class="v" data-role="sTotalRupee">₹0</span></div>
+        <div class="net-block" data-role="netBlock">
+          <div class="lbl">Net profit margin</div>
+          <div class="val" data-role="sNetPct">0%</div>
+          <div class="val2" data-role="sNetRupee">₹0 per plate</div>
+          <div class="msg" data-role="sMsg"></div>
+        </div>
+      </div>
+    `);
+  }
+
+  // re-fetch refs after possible innerHTML rebuild
+  const priceEl2 = rootEl.querySelector('[data-role="price"]');
+  const costListEl2 = rootEl.querySelector('[data-role="costList"]');
+  const customFormEl = rootEl.querySelector('[data-role="customForm"]');
+  const customNameEl = rootEl.querySelector('[data-role="customName"]');
+  const customPctEl = rootEl.querySelector('[data-role="customPct"]');
+  const addCustomBtn = rootEl.querySelector('[data-role="addCustom"]');
+  const customAddBtn = rootEl.querySelector('[data-role="customAdd"]');
+  const customCancelBtn = rootEl.querySelector('[data-role="customCancel"]');
+  const presetBtn = rootEl.querySelector('[data-role="preset"]');
+
+  function renderCosts(){
+    costListEl2.innerHTML = '';
+    costs.forEach(c=>{
+      const amt = price * (c.pct/100);
+      const card = document.createElement('div');
+      card.className = 'cost-card' + (c.enabled ? '' : ' disabled');
+      card.innerHTML = `
+        <div class="cost-card-top">
+          <div class="cost-name">${escapeHtml(c.name)}</div>
+          <div class="cost-actions">
+            <label class="switch">
+              <input type="checkbox" ${c.enabled?'checked':''} data-act="toggle" data-id="${c.id}">
+              <span class="slider-track"></span>
+            </label>
+            <button class="trash-btn" data-act="remove" data-id="${c.id}" title="Remove">✕</button>
+          </div>
+        </div>
+        <div class="cost-controls">
+          <div class="stepper">
+            <button type="button" class="step-btn" data-act="dec" data-id="${c.id}">–</button>
+            <input type="number" class="pct-input" min="0" max="100" step="1" value="${c.pct}" data-act="pct" data-id="${c.id}">
+            <button type="button" class="step-btn" data-act="inc" data-id="${c.id}">+</button>
+          </div>
+          <span class="pct-sign">%</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${c.pct}%"></div></div>
+        </div>
+        <div class="cost-rupee">
+          <span>${c.enabled ? 'Deducted from price' : 'Excluded from calculation'}</span>
+          <span class="amt">${c.enabled ? rupee(amt) : '—'}</span>
+        </div>
+      `;
+      costListEl2.appendChild(card);
+    });
+
+    costListEl2.querySelectorAll('[data-act="toggle"]').forEach(el=>{
+      el.addEventListener('change', ()=>{ setById(el.dataset.id, {enabled: el.checked}); });
+    });
+    costListEl2.querySelectorAll('[data-act="remove"]').forEach(el=>{
+      el.addEventListener('click', ()=>{ costs = costs.filter(c=>c.id!==el.dataset.id); renderCosts(); updateSummary(); });
+    });
+    costListEl2.querySelectorAll('[data-act="pct"]').forEach(el=>{
+      el.addEventListener('input', ()=>{ setById(el.dataset.id, {pct: clampPct(el.value)}); });
+    });
+    costListEl2.querySelectorAll('[data-act="inc"]').forEach(el=>{
+      el.addEventListener('click', ()=>{ bump(el.dataset.id, 1); });
+    });
+    costListEl2.querySelectorAll('[data-act="dec"]').forEach(el=>{
+      el.addEventListener('click', ()=>{ bump(el.dataset.id, -1); });
+    });
+  }
+
+  function bump(id, delta){
+    const c = costs.find(x=>x.id===id);
+    if(!c) return;
+    c.pct = clampPct(c.pct + delta);
+    renderCosts();
+    updateSummary();
+  }
+
+  function setById(id, patch){
+    const c = costs.find(x=>x.id===id);
+    if(!c) return;
+    Object.assign(c, patch);
+    renderCosts();
+    updateSummary();
+  }
+
+  function updateSummary(){
+    price = clampPct2(parseFloat(priceEl2.value)) ;
+    const totalPct = costs.filter(c=>c.enabled).reduce((s,c)=>s+c.pct,0);
+    const totalRupee = price * (totalPct/100);
+    const netPct = 100 - totalPct;
+    const netRupee = price - totalRupee;
+
+    rootEl.querySelector('[data-role="sTotalPct"]').textContent = trimPct(totalPct) + '%';
+    rootEl.querySelector('[data-role="sTotalRupee"]').textContent = rupee(totalRupee);
+    rootEl.querySelector('[data-role="sNetPct"]').textContent = trimPct(netPct) + '%';
+    rootEl.querySelector('[data-role="sNetRupee"]').textContent = rupee(netRupee) + ' per plate';
+
+    const summaryElx = rootEl.querySelector('[data-role="summary"]');
+    const netBlockEl = rootEl.querySelector('[data-role="netBlock"]');
+    const msgEl = rootEl.querySelector('[data-role="sMsg"]');
+    if(netRupee < 0){
+      summaryElx.classList.add('loss'); netBlockEl.classList.add('loss');
+      msgEl.textContent = 'Losing money on every plate at this price.';
+    } else {
+      summaryElx.classList.remove('loss'); netBlockEl.classList.remove('loss');
+      msgEl.textContent = netPct < 10 ? 'Margins are thin here.' : 'Healthy margin at current settings.';
+    }
+    onChange({price, totalPct, totalRupee, netPct, netRupee});
+  }
+
+  function trimPct(v){ return (Math.round(v*10)/10).toString(); }
+  function clampPct2(v){ return isNaN(v) ? 0 : Math.max(0, v); }
+
+  priceEl2.addEventListener('input', updateSummary);
+  if(presetBtn){
+    presetBtn.addEventListener('click', ()=>{
+      costs.forEach(c=>{ if(/rent/i.test(c.name) || /labor/i.test(c.name)) c.pct = 0; });
+      renderCosts(); updateSummary();
+    });
+  }
+  addCustomBtn.addEventListener('click', ()=>{ customFormEl.classList.add('show'); customNameEl.focus(); });
+  customCancelBtn.addEventListener('click', ()=>{ customFormEl.classList.remove('show'); customNameEl.value=''; customPctEl.value=''; });
+  customAddBtn.addEventListener('click', ()=>{
+    const name = customNameEl.value.trim();
+    const pct = clampPct(customPctEl.value || 0);
+    if(!name) return;
+    costs.push({id:'custom_'+(seq++)+'_'+Date.now(), name, pct, enabled:true});
+    customNameEl.value=''; customPctEl.value='';
+    customFormEl.classList.remove('show');
+    renderCosts(); updateSummary();
+  });
+
+  renderCosts();
+  updateSummary();
+
+  return { getState: ()=>({price, costs}) };
+}
+
+/* ---------------- Instantiate calculators ---------------- */
+createCalculator(document.getElementById('calc1-root'), {
+  defaultPrice: 300,
+  priceHint: 'e.g. Paneer Butter Masala — the price your customer pays on the app.',
+  showPreset: true,
+  layout: 'sidebar',
+  defaultCosts: [
+    {id:'raw',   name:'Raw Material Cost',           pct:25, enabled:true},
+    {id:'comm',  name:'Zomato Commission',            pct:25, enabled:true},
+    {id:'ads',   name:'Zomato Ads Spend',              pct:10, enabled:true},
+    {id:'disc',  name:'Zomato Platform Discounts',     pct:10, enabled:true},
+    {id:'gst',   name:'GST / Taxes',                    pct:5,  enabled:true},
+    {id:'labor', name:'Labor & Payroll Costs',          pct:25, enabled:true},
+    {id:'rent',  name:'Rent & Utilities (Overheads)',   pct:15, enabled:true},
+  ]
+});
+
+let dineState = null, zomatoState = null;
+function refreshDelta(){
+  const deltaVal = document.getElementById('deltaVal');
+  const deltaMsg = document.getElementById('deltaMsg');
+  if(!dineState || !zomatoState){ return; }
+  const diff = zomatoState.netRupee - dineState.netRupee;
+  deltaVal.textContent = (diff>=0?'+':'') + rupee(diff);
+  deltaVal.classList.toggle('loss', diff < 0);
+  deltaMsg.textContent = diff >= 0
+    ? 'Taking this dish onto Zomato adds pure incremental profit per plate on top of your dine-in business.'
+    : 'At current settings, the Zomato version of this dish is less profitable than dine-in — revisit commission, ads or discount %.';
+}
+
+createCalculator(document.getElementById('calc2-root'), {
+  defaultPrice: 300,
+  priceLabel: 'Dine-in menu price',
+  priceHint: 'The price on your physical dine-in menu.',
+  showPreset: false,
+  layout: 'stack',
+  onChange: (s)=>{ dineState = s; refreshDelta(); },
+  defaultCosts: [
+    {id:'d_rent',  name:'Rent & Electricity',      pct:15, enabled:true},
+    {id:'d_staff', name:'Staff & Salaries',        pct:25, enabled:true},
+    {id:'d_raw',   name:'Raw Food Ingredients',    pct:25, enabled:true},
+    {id:'d_pack',  name:'Packaging Material',      pct:0,  enabled:true},
+    {id:'d_comm',  name:'Zomato Commission',       pct:0,  enabled:true},
+    {id:'d_mkt',   name:'Marketing & Discounts',   pct:2,  enabled:true},
+  ]
+});
+
+createCalculator(document.getElementById('calc3-root'), {
+  defaultPrice: 300,
+  priceLabel: 'Zomato listed price',
+  priceHint: 'The price this dish is listed at on Zomato.',
+  showPreset: false,
+  layout: 'stack',
+  onChange: (s)=>{ zomatoState = s; refreshDelta(); },
+  defaultCosts: [
+    {id:'z_rent',  name:'Rent & Electricity',      pct:0,  enabled:true},
+    {id:'z_staff', name:'Staff & Salaries',        pct:0,  enabled:true},
+    {id:'z_raw',   name:'Raw Food Ingredients',    pct:25, enabled:true},
+    {id:'z_pack',  name:'Packaging Material',      pct:5,  enabled:true},
+    {id:'z_comm',  name:'Zomato Commission',       pct:25, enabled:true},
+    {id:'z_mkt',   name:'Marketing & Discounts',   pct:15, enabled:true},
+  ]
+});
+</script>
+</body>
+</html>
